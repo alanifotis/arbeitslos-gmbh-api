@@ -1,6 +1,5 @@
-package arbeitslos.gmbh.api.model.dto;
+package arbeitslos.gmbh.api.model;
 
-import arbeitslos.gmbh.api.model.EmploymentStatus;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.relational.core.mapping.Table;
