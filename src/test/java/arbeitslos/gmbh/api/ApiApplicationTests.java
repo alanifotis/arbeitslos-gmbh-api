@@ -2,8 +2,6 @@ package arbeitslos.gmbh.api;
 
 import arbeitslos.gmbh.api.model.EmploymentStatus;
 import arbeitslos.gmbh.api.model.UnemployedEntity;
-import com.jayway.jsonpath.JsonPath;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,20 +11,22 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.core.publisher.Mono;
 
-import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@WithMockUser
 class ApiApplicationTests {
 	@Autowired
 	WebTestClient rest;
 
 	@Test
-	@WithMockUser
 	void shouldReturnAllUnemployedEntities() {
 		var response = rest
 				.get()
@@ -35,18 +35,16 @@ class ApiApplicationTests {
 				.exchange()
 				.expectStatus().isOk()
 				.expectBodyList(UnemployedEntity.class)
-				.returnResult()
-				;
+				.returnResult();
 
-		assertThat(response.getStatus()).isEqualTo(HttpStatus.OK);
+		assertEquals(HttpStatus.OK,response.getStatus());
         assertNotNull(response.getResponseBody());
         assertFalse(response.getResponseBody().isEmpty());
-		assertThat(response.getResponseBody().getFirst().getFirstName()).isEqualTo("user");
+		assertEquals("user",response.getResponseBody().getFirst().getFirstName());
 	}
 
 	@Test
-	@WithMockUser
-	void shouldFindByUnemployedEntityByValidId() {
+	void shouldReturnOkAndFindByUnemployedEntityByValidId() {
 		var response = rest
 				.get()
 				.uri("/api/v1/unemployed/0196a2c6-3072-7902-873f-36a8cec90577")
@@ -60,6 +58,30 @@ class ApiApplicationTests {
         assertNotNull(response.getResponseBody());
         assertEquals("user", response.getResponseBody().getFirstName());
 		assertEquals(EmploymentStatus.FARMING, response.getResponseBody().getEmploymentStatus());
+	}
+
+	@Test
+	void shouldReturnNotFoundByInexistentId() {
+		 rest
+				.get()
+				.uri("/api/v1/unemployed/0196a2c6-3072-7902-873f-bba8cec90577")
+				.accept(MediaType.APPLICATION_JSON)
+				.exchange()
+				.expectStatus().isNotFound()
+				.expectBody().isEmpty();
+	}
+
+	@Test
+	void shouldReturnBadRequestOnInvalidId() {
+		rest
+				.get()
+				.uri("/api/v1/unemployed/0196a2c6-3072-873f-bba8cec90577")
+				.accept(MediaType.APPLICATION_JSON)
+				.exchange()
+				.expectStatus().isBadRequest()
+				.expectBody()
+				.jsonPath("$.error").isEqualTo("Bad Request")
+				.returnResult();
 
 	}
 
