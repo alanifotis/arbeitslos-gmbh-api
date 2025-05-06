@@ -33,7 +33,7 @@ public class UnemployedController {
         return _service.findById(id)
                 .map(entity -> ResponseEntity
                         .ok()
-                        .eTag("\"" + id + "\"") // Use a version/hash if available
+                        .eTag("\"" + id + "\"")
                         .body(entity))
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
