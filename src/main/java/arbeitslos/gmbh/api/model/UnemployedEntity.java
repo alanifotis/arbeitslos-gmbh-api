@@ -15,9 +15,12 @@ import java.util.UUID;
 public class UnemployedEntity {
     @Id
     private UUID id;
+    @Column("firstname")
     private String firstName;
+    @Column("lastname")
     private String lastName;
     private String email;
     private String password;
+    @Column("employmentstatus")
     private EmploymentStatus employmentStatus;
 }
