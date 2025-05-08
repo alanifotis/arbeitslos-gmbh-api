@@ -5,9 +5,11 @@ import arbeitslos.gmbh.api.service.UnemployedService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.net.URI;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -38,4 +40,19 @@ public class UnemployedController {
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
+    @PostMapping
+    public Mono<ResponseEntity<UnemployedEntity>> save(@RequestBody UnemployedEntity entity, UriComponentsBuilder uriBuilder) {
+        var result = _service.save(entity);
+        return result.map(created -> {
+            if (created != null) {
+                var uri = uriBuilder
+                        .path("/api/v1/unemployed/{id}")
+                        .buildAndExpand(created.getId())
+                        .toUri();
+                return ResponseEntity.created(uri).body(created);
+            }
+            return ResponseEntity.badRequest().build();
+        });
+
+    }
 }

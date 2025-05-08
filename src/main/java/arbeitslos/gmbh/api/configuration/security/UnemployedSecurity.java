@@ -1,4 +1,4 @@
-package arbeitslos.gmbh.api.configuration;
+package arbeitslos.gmbh.api.configuration.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,6 +17,7 @@ public class UnemployedSecurity {
     public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
         http
                 .cors(withDefaults())
+                .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(exchanges -> {
                             exchanges.pathMatchers("/api/v1/unemployed/**").permitAll();
                             exchanges.anyExchange().authenticated();

@@ -1,6 +1,7 @@
 package arbeitslos.gmbh.api.service;
 
 import arbeitslos.gmbh.api.model.UnemployedEntity;
+import org.springframework.http.ResponseEntity;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -10,4 +11,6 @@ public interface UnemployedService {
     public Flux<UnemployedEntity> findAll();
 
     Mono<UnemployedEntity> findById(UUID id);
+
+    Mono<UnemployedEntity> save(UnemployedEntity entity);
 }
