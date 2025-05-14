@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.Optional;
 import java.util.UUID;
 
 public interface UnemployedService {
@@ -13,4 +14,6 @@ public interface UnemployedService {
     Mono<UnemployedEntity> findById(UUID id);
 
     Mono<UnemployedEntity> save(UnemployedEntity entity);
+
+    Mono<UnemployedEntity> findByEmail(String email);
 }

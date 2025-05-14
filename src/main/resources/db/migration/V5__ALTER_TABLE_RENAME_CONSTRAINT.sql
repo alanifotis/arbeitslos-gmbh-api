@@ -1,0 +1,2 @@
+ALTER TABLE unemployed
+RENAME CONSTRAINT unique_column_name TO unique_email_constraint;

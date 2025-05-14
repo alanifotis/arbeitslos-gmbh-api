@@ -1,5 +1,7 @@
-package arbeitslos.gmbh.api.converter;
+package arbeitslos.gmbh.api.configuration.database;
 
+import arbeitslos.gmbh.api.converter.UnemployedEntityReadingConverter;
+import arbeitslos.gmbh.api.converter.UnemployedEntityWritingConverter;
 import arbeitslos.gmbh.api.model.EmploymentStatus;
 import org.springframework.context.annotation.Bean;
 
@@ -24,7 +26,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableTransactionManagement
 @EnableR2dbcRepositories
 @EnableR2dbcAuditing
-public class DatabaseConfig extends AbstractR2dbcConfiguration {
+public class UnemployedDatabaseConfig extends AbstractR2dbcConfiguration {
 
     @Bean
     public ConnectionFactory connectionFactory() {

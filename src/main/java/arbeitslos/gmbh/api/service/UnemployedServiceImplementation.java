@@ -1,9 +1,11 @@
 package arbeitslos.gmbh.api.service;
 
+import arbeitslos.gmbh.api.errors.custom.DuplicateEmailException;
 import arbeitslos.gmbh.api.model.EmploymentStatus;
 import arbeitslos.gmbh.api.model.UnemployedEntity;
 import arbeitslos.gmbh.api.repository.UnemployedRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -28,6 +30,8 @@ public class UnemployedServiceImplementation implements UnemployedService{
 
     @Override
     public Mono<UnemployedEntity> save(UnemployedEntity entity) {
+        var constraint = "unique_email_constraint";
+
         return _repository.save(UnemployedEntity.builder()
                 .email(entity.getEmail())
                 .firstName(entity.getFirstName())
@@ -35,7 +39,23 @@ public class UnemployedServiceImplementation implements UnemployedService{
                 .password(entity.getPassword())
                 .employmentStatus(entity.getEmploymentStatus())
                 .build()
+        ).onErrorMap(
+                DuplicateKeyException.class, exception -> {
+                    if (exception.getMessage() != null && exception.getMessage().contains(constraint)) {
+                        return new DuplicateEmailException(
+                                entity.getEmail(),
+                                "The email '" + entity.getEmail() + "' already exists.",
+                                exception
+                        );
+                    }
+                    return exception;
+                }
         );
+    }
+
+    @Override
+    public Mono<UnemployedEntity> findByEmail(String email) {
+        return _repository.findByEmail(email);
     }
 
 }

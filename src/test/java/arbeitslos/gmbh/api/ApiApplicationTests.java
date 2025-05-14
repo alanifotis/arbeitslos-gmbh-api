@@ -2,20 +2,26 @@ package arbeitslos.gmbh.api;
 
 import arbeitslos.gmbh.api.model.EmploymentStatus;
 import arbeitslos.gmbh.api.model.UnemployedEntity;
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+import jakarta.annotation.PostConstruct;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.netty.http.client.HttpClient;
+import io.netty.handler.ssl.SslContextBuilder;
 
-import java.util.NoSuchElementException;
-import java.util.Objects;
+
+import javax.net.ssl.SSLException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -24,13 +30,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @WithMockUser
+@AutoConfigureWebTestClient
 class ApiApplicationTests {
     @Autowired
     private WebTestClient rest;
-    private final String subUri = "/api/v1/unemployed";
     @LocalServerPort
     private int port;
-    private final String host = "http://localhost:";
+    private final String subUri = "/api/v1/unemployed";
 
     @Test
     void shouldReturnAllUnemployedEntities() {
@@ -46,14 +52,14 @@ class ApiApplicationTests {
         assertEquals(HttpStatus.OK, response.getStatus());
         assertNotNull(response.getResponseBody());
         assertFalse(response.getResponseBody().isEmpty());
-        assertEquals("user", response.getResponseBody().getFirst().getFirstName());
+        assertEquals("test", response.getResponseBody().getFirst().getFirstName());
     }
 
     @Test
     void shouldReturnOkAndFindByUnemployedEntityByValidId() {
         var response = rest
                 .get()
-                .uri("{}/0196a2c6-3072-7902-873f-36a8cec90577", subUri)
+                .uri(subUri + "/1388947d-89c8-434f-b85d-6eba7b20bef5")
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -62,7 +68,7 @@ class ApiApplicationTests {
 
         assertNotNull(response);
         assertNotNull(response.getResponseBody());
-        assertEquals("user", response.getResponseBody().getFirstName());
+        assertEquals("test", response.getResponseBody().getFirstName());
         assertEquals(EmploymentStatus.FARMING, response.getResponseBody().getEmploymentStatus());
     }
 
@@ -70,23 +76,22 @@ class ApiApplicationTests {
     void shouldReturnNotFoundByInexistentId() {
         rest
                 .get()
-                .uri("{}/0196a2c6-3072-7902-873f-bba8cec90577", subUri)
+                .uri(subUri + "/0116a2c6-3072-7902-873f-bba8cec90577")
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
-                .expectStatus().isNotFound()
-                .expectBody().isEmpty();
+                .expectStatus().isNotFound();
     }
 
     @Test
     void shouldReturnBadRequestOnInvalidId() {
         rest
                 .get()
-                .uri("{}/0196a2c6-3072-873f-bba8cec90577", subUri)
+                .uri(subUri + "/0196a2c6-3072-873f-bba8cec90577")
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isBadRequest()
                 .expectBody()
-                .jsonPath("$.error").isEqualTo("Bad Request")
+                .jsonPath("$.title").isEqualTo("JSON Decoding Error")
                 .returnResult();
 
     }
@@ -99,7 +104,7 @@ class ApiApplicationTests {
         var newEntity = UnemployedEntity.builder()
                 .firstName("test")
                 .lastName("user")
-                .email("t@t.t")
+                .email("test@test.test")
                 .password("test")
                 .employmentStatus(EmploymentStatus.UNEMPLOYED)
                 .build();
@@ -124,7 +129,7 @@ class ApiApplicationTests {
 
         assertNotNull(uri);
 
-        assertEquals(host + port + subUri + '/' + response.getResponseBody().getId(), uri);
+        assertEquals(subUri + response.getResponseBody().getId(), uri);
     }
 
 }

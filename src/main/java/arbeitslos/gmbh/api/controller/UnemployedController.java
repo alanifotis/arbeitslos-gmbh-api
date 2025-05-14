@@ -2,16 +2,16 @@ package arbeitslos.gmbh.api.controller;
 
 import arbeitslos.gmbh.api.model.UnemployedEntity;
 import arbeitslos.gmbh.api.service.UnemployedService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.net.URI;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicReference;
 
 @RestController
 @RequiredArgsConstructor
@@ -20,6 +20,7 @@ import java.util.concurrent.atomic.AtomicReference;
         allowedHeaders = "*",
         origins = "*"
 )
+@Slf4j
 public class UnemployedController {
     private final UnemployedService _service;
 
@@ -40,8 +41,18 @@ public class UnemployedController {
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/search{email}")
+    public Mono<ResponseEntity<UnemployedEntity>> findById(@RequestParam String email) {
+        return _service.findByEmail(email)
+                .map(entity -> ResponseEntity
+                        .ok()
+                        .eTag("\"" + email + "\"")
+                        .body(entity))
+                .defaultIfEmpty(ResponseEntity.notFound().build());
+    }
+
     @PostMapping
-    public Mono<ResponseEntity<UnemployedEntity>> save(@RequestBody UnemployedEntity entity, UriComponentsBuilder uriBuilder) {
+    public Mono<ResponseEntity<UnemployedEntity>> save(@Valid @RequestBody UnemployedEntity entity, UriComponentsBuilder uriBuilder) {
         var result = _service.save(entity);
         return result.map(created -> {
             if (created != null) {
@@ -51,7 +62,7 @@ public class UnemployedController {
                         .toUri();
                 return ResponseEntity.created(uri).body(created);
             }
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(entity);
         });
 
     }
